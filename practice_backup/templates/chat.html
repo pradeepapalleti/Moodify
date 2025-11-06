@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Chat 🎵💬</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-green-hover: #1ed760;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #121212;
+            --spotify-gray: #282828;
+            --spotify-light-gray: #b3b3b3;
+            --spotify-white: #ffffff;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --bg-primary: #121212;
+            --bg-secondary: #181818;
+            --bg-tertiary: #282828;
+            --bg-elevated: #2a2a2a;
+            --border-color: #404040;
+            --card-bg: #181818;
+            --input-bg: #242424;
+        }
+        
+        [data-theme="light"] {
+            --spotify-black: #ffffff;
+            --spotify-dark-gray: #f6f6f6;
+            --spotify-gray: #e8e8e8;
+            --text-primary: #000000;
+            --text-secondary: #6a6a6a;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f6f6;
+            --bg-tertiary: #e8e8e8;
+            --bg-elevated: #ffffff;
+            --border-color: #d9d9d9;
+            --card-bg: #ffffff;
+            --input-bg: #f6f6f6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--spotify-green) 0%, var(--spotify-green-hover) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 500px;
+            font-size: 0.9em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.04);
+            background: var(--bg-elevated);
+        }
+        
+        .nav-btn.active {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border-color: var(--spotify-green);
+        }
+        
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.04);
+            background: var(--bg-elevated);
+        }
+        
+        .language-selector {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+        }
+        
+        .language-selector h3 {
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        
+        .language-selector p {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        
+        .lang-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-btn:hover {
+            background: var(--bg-elevated);
+            transform: scale(1.05);
+        }
+        
+        .lang-btn.active {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border-color: var(--spotify-green);
+        }
+        
+        .chat-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            height: 550px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--spotify-green);
+            border-radius: 4px;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            text-align: right;
+        }
+        
+        .bot-message {
+            text-align: left;
+        }
+        
+        .message-bubble {
+            display: inline-block;
+            padding: 14px 18px;
+            border-radius: 16px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .user-message .message-bubble {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            font-weight: 600;
+        }
+        
+        .bot-message .message-bubble {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .detected-mood {
+            display: inline-block;
+            background: #FFA500;
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 700;
+            margin: 8px 4px;
+        }
+        
+        .detected-language {
+            display: inline-block;
+            background: #1E90FF;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 700;
+            margin: 8px 4px;
+        }
+        
+        .song-recommendation {
+            background: var(--bg-elevated);
+            border-left: 4px solid var(--spotify-green);
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .song-recommendation:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(4px);
+        }
+        
+        .song-info {
+            flex: 1;
+        }
+        
+        .song-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .song-details {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+        
+        .play-btn {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+            margin-left: 12px;
+            white-space: nowrap;
+        }
+        
+        .play-btn:hover {
+            background: var(--spotify-green-hover);
+            transform: scale(1.06);
+        }
+        
+        .album-btn {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            margin-top: 16px;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .album-btn:hover {
+            background: var(--spotify-green-hover);
+            transform: scale(1.02);
+        }
+        
+        .chat-input-area {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 500px;
+            font-size: 0.95em;
+            outline: none;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .chat-input:focus {
+            border-color: var(--spotify-green);
+            background: var(--bg-elevated);
+        }
+        
+        .chat-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .send-btn {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 500px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .send-btn:hover {
+            background: var(--spotify-green-hover);
+            transform: scale(1.04);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .typing-indicator.show {
+            display: block;
+        }
+        
+        .typing-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--spotify-green);
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        .welcome-message {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 20px;
+        }
+        
+        .welcome-message h2 {
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        
+        .example-messages {
+            margin-top: 20px;
+        }
+        
+        .example-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            margin: 6px;
+            border-radius: 500px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .example-btn:hover {
+            background: var(--bg-elevated);
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .chat-container { height: 450px; }
+            .top-controls { justify-content: center; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <div class="container">
+        <header>
+            <h1>🎵 Music Chat AI</h1>
+            <p class="subtitle">Tell me how you're feeling, and I'll find the perfect soundtrack</p>
+        </header>
+        
+        <div class="top-controls">
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="window.location.href='/'">🎭 Mood Selector</button>
+                <button class="nav-btn active">💬 Chat Mode</button>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+        </div>
+        
+        <div class="language-selector">
+            <h3>🌍 Language Preference (Optional)</h3>
+            <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">
+                You can mention language in your messages (e.g., "Hindi songs", "Tamil music") or select here. Default is All Languages.
+            </p>
+            <button class="lang-btn active" onclick="selectLanguage('Auto')">🎵 All Languages</button>
+            {% for language in languages.keys() %}
+            <button class="lang-btn" onclick="selectLanguage('{{ language }}')">{{ language }}</button>
+            {% endfor %}
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <h2>👋 Welcome!</h2>
+                    <p>Tell me how you're feeling in English, and I'll recommend songs!</p>
+                    <p style="margin-top: 10px;">💡 You can specify language in your message (e.g., "I want Hindi sad songs")</p>
+                    <div class="example-messages">
+                        <p><strong>Try saying:</strong></p>
+                        <button class="example-btn" onclick="sendExample('I am feeling very happy!')">😊 Happy songs</button>
+                        <button class="example-btn" onclick="sendExample('Give me sad Hindi songs')">😢 Sad Hindi</button>
+                        <button class="example-btn" onclick="sendExample('I need energetic Telugu music!')">⚡ Energetic Telugu</button>
+                        <button class="example-btn" onclick="sendExample('Want romantic Tamil songs')">� Romantic Tamil</button>
+                        <button class="example-btn" onclick="sendExample('More like that!')">🔄 Continue</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                Detecting mood...
+            </div>
+            
+            <div class="chat-input-area">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Type in English (e.g., 'I'm happy', 'Give me sad Hindi songs', 'Want Telugu party music')"
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send 🚀</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedLanguage = 'Auto';
+        let sessionId = 'session_' + Date.now();
+        
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const themeToggle = document.getElementById('themeToggle');
+            document.body.setAttribute('data-theme', savedTheme);
+            themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+        });
+        
+        function selectLanguage(language) {
+            selectedLanguage = language;
+            
+            // Update button styles
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.trim() === language || btn.textContent.includes(language)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function sendExample(text) {
+            document.getElementById('chatInput').value = text;
+            sendMessage();
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Clear input
+            input.value = '';
+            
+            // Hide welcome message if present
+            const welcomeMsg = document.querySelector('.welcome-message');
+            if (welcomeMsg) welcomeMsg.remove();
+            
+            // Add user message
+            addUserMessage(message);
+            
+            // Show typing indicator
+            document.getElementById('typingIndicator').classList.add('show');
+            document.getElementById('sendBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        language: selectedLanguage === 'Auto' ? null : selectedLanguage,
+                        num_songs: 5,
+                        session_id: sessionId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addBotMessage(data);
+                } else {
+                    addErrorMessage(data.error || 'Sorry, something went wrong!');
+                }
+            } catch (error) {
+                addErrorMessage('Failed to connect to server: ' + error.message);
+            } finally {
+                document.getElementById('typingIndicator').classList.remove('show');
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('chatInput').focus();
+            }
+        }
+        
+        function addUserMessage(message) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.innerHTML = `
+                <div class="message-bubble">${escapeHtml(message)}</div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function addBotMessage(data) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot-message';
+            
+            let songsHtml = '';
+            data.recommendations.forEach((song, index) => {
+                const spotifyUrl = `https://open.spotify.com/track/${song.id}`;
+                songsHtml += `
+                    <div class="song-recommendation">
+                        <div class="song-info">
+                            <div class="song-name">${index + 1}. ${escapeHtml(song.name)} ⭐${song.popularity}</div>
+                            <div class="song-details">🎤 ${escapeHtml(song.artist)} | 💿 ${escapeHtml(song.album)} | 🌍 ${song.language}</div>
+                        </div>
+                        <button class="play-btn" onclick="window.open('${spotifyUrl}', '_blank')">
+                            ▶️ Play
+                        </button>
+                    </div>
+                `;
+            });
+            
+            // Build badges HTML
+            let badgesHtml = `<div class="detected-mood">🎭 Mood: ${data.detected_mood}</div>`;
+            
+            if (data.detected_language && data.language_source === 'detected_from_message') {
+                badgesHtml += `<div class="detected-language">🌍 ${data.detected_language} (from message)</div>`;
+            } else if (data.language_used && data.language_used !== 'All') {
+                badgesHtml += `<div class="detected-language">🌍 ${data.language_used}</div>`;
+            } else if (data.language_used === 'All') {
+                badgesHtml += `<div class="detected-language" style="background: #28a745;">🌍 All Languages</div>`;
+            }
+            
+            // Create Spotify playlist URL with track IDs
+            const trackUris = data.track_ids.slice(0, 30).join(',');
+            const playlistUrl = `https://open.spotify.com/search/${encodeURIComponent(data.detected_mood + ' ' + (data.language_used || 'music'))}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    ${escapeHtml(data.bot_response)}
+                    ${badgesHtml}
+                    <div style="margin-top: 10px;">
+                        ${songsHtml}
+                    </div>
+                    <button class="album-btn" onclick="window.open('${playlistUrl}', '_blank')">
+                        🎵 Open Full Album in Spotify
+                    </button>
+                </div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function addErrorMessage(error) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot-message';
+            messageDiv.innerHTML = `
+                <div class="message-bubble" style="background: #ff6b6b; color: white;">
+                    ❌ ${escapeHtml(error)}
+                </div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

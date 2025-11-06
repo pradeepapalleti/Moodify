@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood-Based Music Recommender 🎵</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-green-hover: #1ed760;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #121212;
+            --spotify-gray: #282828;
+            --spotify-light-gray: #b3b3b3;
+            --spotify-white: #ffffff;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --bg-primary: #121212;
+            --bg-secondary: #181818;
+            --bg-tertiary: #282828;
+            --bg-elevated: #2a2a2a;
+            --border-color: #404040;
+            --card-bg: #181818;
+            --input-bg: #242424;
+        }
+        
+        [data-theme="light"] {
+            --spotify-black: #ffffff;
+            --spotify-dark-gray: #f6f6f6;
+            --spotify-gray: #e8e8e8;
+            --text-primary: #000000;
+            --text-secondary: #6a6a6a;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f6f6;
+            --bg-tertiary: #e8e8e8;
+            --bg-elevated: #ffffff;
+            --border-color: #d9d9d9;
+            --card-bg: #ffffff;
+            --input-bg: #f6f6f6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--spotify-green) 0%, var(--spotify-green-hover) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .nav-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 12px 24px;
+            border-radius: 500px;
+            font-size: 0.9em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.04);
+            background: var(--bg-elevated);
+        }
+        
+        .nav-btn.active {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border-color: var(--spotify-green);
+        }
+        
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.04);
+            background: var(--bg-elevated);
+        }
+        
+        .stats {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+        }
+        
+        .stats h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 1.4em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: var(--bg-elevated);
+            transform: translateY(-4px);
+        }
+        
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: 900;
+            color: var(--spotify-green);
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .mood-selector {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+        }
+        
+        .mood-selector h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 1.4em;
+        }
+        
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .mood-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: capitalize;
+        }
+        
+        .mood-btn:hover {
+            background: var(--bg-elevated);
+            transform: translateY(-4px);
+        }
+        
+        .mood-btn.active {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border-color: var(--spotify-green);
+            transform: scale(1.05);
+        }
+        
+        .num-songs {
+            margin: 24px 0;
+        }
+        
+        .num-songs label {
+            display: block;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1em;
+        }
+        
+        .num-songs input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .num-songs input:focus {
+            border-color: var(--spotify-green);
+            outline: none;
+            background: var(--bg-elevated);
+        }
+        
+        .get-recommendations-btn {
+            width: 100%;
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border: none;
+            padding: 16px;
+            border-radius: 500px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .get-recommendations-btn:hover {
+            background: var(--spotify-green-hover);
+            transform: scale(1.02);
+        }
+        
+        .get-recommendations-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .results h2 {
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            font-weight: 700;
+            font-size: 1.6em;
+        }
+        
+        .song-list {
+            list-style: none;
+        }
+        
+        .song-item {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 4px solid var(--spotify-green);
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .song-item:hover {
+            background: var(--bg-elevated);
+            transform: translateX(8px);
+        }
+        
+        .song-content {
+            flex: 1;
+        }
+        
+        .song-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1.05em;
+            margin-bottom: 6px;
+        }
+        
+        .song-artist {
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-size: 0.9em;
+        }
+        
+        .song-album {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+        
+        .popularity {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-right: 12px;
+            font-weight: 700;
+        }
+        
+        .play-btn {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .play-btn:hover {
+            background: var(--spotify-green-hover);
+            transform: scale(1.06);
+        }
+        
+        .album-btn {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            margin-top: 20px;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .album-btn:hover {
+            background: var(--spotify-green-hover);
+            transform: scale(1.02);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+            color: var(--text-secondary);
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid var(--bg-tertiary);
+            border-top: 4px solid var(--spotify-green);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            font-weight: 600;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5em; }
+            .mood-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+            .top-controls { justify-content: center; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <div class="container">
+        <header>
+            <h1>🎵 Mood Music Recommender</h1>
+            <p class="subtitle">Discover your perfect soundtrack based on your mood</p>
+        </header>
+        
+        <div class="top-controls">
+            <div class="nav-buttons">
+                <button class="nav-btn active">🎭 Mood Selector</button>
+                <button class="nav-btn" onclick="window.location.href='/chat-page'">💬 Chat Mode</button>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+        </div>
+        
+        <div class="stats">
+            <h2>📊 Music Library Stats</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_tracks }}</div>
+                    <div class="stat-label">Total Songs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.languages }}</div>
+                    <div class="stat-label">Languages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.moods }}</div>
+                    <div class="stat-label">Moods</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.unique_artists }}</div>
+                    <div class="stat-label">Artists</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.unique_albums }}</div>
+                    <div class="stat-label">Albums</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.avg_popularity }}</div>
+                    <div class="stat-label">Avg Popularity</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mood-selector">
+            <h2>🌍 Select Language</h2>
+            <div class="mood-grid">
+                <button class="mood-btn" onclick="selectLanguage('All')">
+                    All Languages<br>
+                    <small>({{ stats.total_tracks }} songs)</small>
+                </button>
+                {% for language, count in languages.items() %}
+                <button class="mood-btn" onclick="selectLanguage('{{ language }}')">
+                    {{ language }}<br>
+                    <small>({{ count }} songs)</small>
+                </button>
+                {% endfor %}
+            </div>
+            
+            <h2 style="margin-top: 30px;">🎭 Select Your Mood</h2>
+            <div class="mood-grid">
+                {% for mood, count in moods.items() %}
+                <button class="mood-btn" onclick="selectMood('{{ mood }}')">
+                    {{ mood }}<br>
+                    <small>({{ count }} songs)</small>
+                </button>
+                {% endfor %}
+            </div>
+            
+            <div class="num-songs">
+                <label for="numSongs">Number of Recommendations:</label>
+                <input type="number" id="numSongs" min="1" max="50" value="10">
+            </div>
+            
+            <button class="get-recommendations-btn" onclick="getRecommendations()" id="recommendBtn" disabled>
+                Get Recommendations
+            </button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Finding perfect songs for you...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="results" id="results">
+            <h2 id="resultsTitle">Recommendations</h2>
+            <ul class="song-list" id="songList"></ul>
+        </div>
+    </div>
+    
+    <script>
+        let selectedMood = null;
+        let selectedLanguage = 'All';
+        
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const themeToggle = document.getElementById('themeToggle');
+            document.body.setAttribute('data-theme', savedTheme);
+            themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+        });
+        
+        function selectLanguage(language) {
+            selectedLanguage = language;
+            
+            // Update button styles
+            const languageButtons = document.querySelectorAll('.mood-grid')[0].querySelectorAll('.mood-btn');
+            languageButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(language)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Enable recommend button if mood is selected
+            if (selectedMood) {
+                document.getElementById('recommendBtn').disabled = false;
+            }
+        }
+        
+        function selectMood(mood) {
+            selectedMood = mood;
+            
+            // Update button styles (second mood-grid)
+            const moodButtons = document.querySelectorAll('.mood-grid')[1].querySelectorAll('.mood-btn');
+            moodButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Enable recommend button
+            document.getElementById('recommendBtn').disabled = false;
+        }
+        
+        async function getRecommendations() {
+            if (!selectedMood) {
+                alert('Please select a mood first!');
+                return;
+            }
+            
+            const numSongs = document.getElementById('numSongs').value;
+            
+            // Show loading, hide results and error
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+            
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        mood: selectedMood,
+                        language: selectedLanguage,
+                        num_songs: numSongs
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'An error occurred');
+                }
+            } catch (error) {
+                showError('Failed to connect to server: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+        
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            const songList = document.getElementById('songList');
+            const resultsTitle = document.getElementById('resultsTitle');
+            
+            const langText = data.language === 'All' ? '' : ` (${data.language})`;
+            resultsTitle.textContent = `🎵 ${data.count} ${data.mood} Songs${langText}`;
+            songList.innerHTML = '';
+            
+            data.recommendations.forEach((song, index) => {
+                const li = document.createElement('li');
+                li.className = 'song-item';
+                const spotifyUrl = `https://open.spotify.com/track/${song.id}`;
+                li.innerHTML = `
+                    <div class="song-content">
+                        <div class="song-name">
+                            ${index + 1}. ${song.name}
+                            <span class="popularity">⭐ ${song.popularity}</span>
+                        </div>
+                        <div class="song-artist">🎤 ${song.artist}</div>
+                        <div class="song-album">💿 ${song.album} | 🌍 ${song.language}</div>
+                    </div>
+                    <button class="play-btn" onclick="window.open('${spotifyUrl}', '_blank')">
+                        ▶️ Play
+                    </button>
+                `;
+                songList.appendChild(li);
+            });
+            
+            // Add "Open Full Album" button at the end
+            const playlistUrl = `https://open.spotify.com/search/${encodeURIComponent(data.mood + ' ' + (data.language || 'music'))}`;
+            const albumBtn = document.createElement('button');
+            albumBtn.className = 'album-btn';
+            albumBtn.textContent = '🎵 Open Full Album in Spotify';
+            albumBtn.onclick = () => window.open(playlistUrl, '_blank');
+            songList.appendChild(albumBtn);
+            
+            resultsDiv.classList.add('show');
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+        }
+    </script>
+</body>
+</html>
