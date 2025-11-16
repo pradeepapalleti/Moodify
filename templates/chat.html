@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Music Chat 🎵💬</title>
+    <title>Moodify 🎵</title>
     <style>
         :root {
             --spotify-green: #1DB954;
@@ -82,16 +82,32 @@
         
         .top-controls {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
+            position: relative;
         }
         
         .nav-buttons {
             display: flex;
             gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            right: 0;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 500px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
         }
         
         .nav-btn {
@@ -117,17 +133,6 @@
             background: var(--spotify-green);
             color: var(--spotify-black);
             border-color: var(--spotify-green);
-        }
-        
-        .theme-toggle {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 10px 20px;
-            border-radius: 500px;
-            cursor: pointer;
-            font-size: 1.2em;
-            transition: all 0.3s ease;
         }
         
         .theme-toggle:hover {
@@ -437,7 +442,8 @@
             background: var(--card-bg);
             border-radius: 16px;
             padding: 30px;
-            max-width: 600px;
+            max-width: 640px;
+            width: 90%;
             text-align: center;
             border: 1px solid var(--border-color);
         }
@@ -447,12 +453,20 @@
             margin-bottom: 20px;
         }
         
-        #cameraVideo {
+        #cameraVideo, #cameraCanvas {
             width: 100%;
-            max-width: 500px;
+            max-width: 100%;
             border-radius: 12px;
             margin: 20px 0;
             border: 2px solid var(--spotify-green);
+        }
+        
+        #cameraCanvas {
+            display: none;
+        }
+        
+        #cameraCanvas.show {
+            display: block;
         }
         
         .camera-buttons {
@@ -572,14 +586,28 @@
         @media (max-width: 768px) {
             h1 { font-size: 2em; }
             .chat-container { height: 450px; }
-            .top-controls { justify-content: center; }
+            .top-controls { 
+                justify-content: center; 
+                flex-direction: column;
+            }
+            .theme-toggle {
+                position: static;
+                margin-top: 10px;
+            }
+            .nav-buttons {
+                flex-wrap: wrap;
+            }
+            .nav-btn {
+                font-size: 0.8em;
+                padding: 8px 16px;
+            }
         }
     </style>
 </head>
 <body data-theme="dark">
     <div class="container">
         <header>
-            <h1>🎵 Music Chat AI</h1>
+            <h1>🎵 Moodify</h1>
             <p class="subtitle">Tell me how you're feeling, and I'll find the perfect soundtrack</p>
         </header>
         
@@ -587,6 +615,7 @@
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="window.location.href='/'">🎭 Mood Selector</button>
                 <button class="nav-btn active">💬 Chat Mode</button>
+                <button class="nav-btn" onclick="openCamera()">📷 Camera Mode</button>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
         </div>
@@ -636,7 +665,6 @@
                     placeholder="Type in English (e.g., 'I'm happy', 'Give me sad Hindi songs', 'Want Telugu party music')"
                     onkeypress="handleKeyPress(event)"
                 >
-                <button class="camera-btn" onclick="openCamera()">📷 Face Mood</button>
                 <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send 🚀</button>
             </div>
         </div>
@@ -645,11 +673,17 @@
         <div class="camera-modal" id="cameraModal">
             <div class="camera-content">
                 <h2>📷 Detect Mood from Your Face</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                    Look at the camera and we'll detect your mood from your facial expression!
-                </p>
+                <div style="background: rgba(30, 215, 96, 0.1); border-left: 3px solid var(--spotify-green); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+                    <p style="color: var(--text-primary); margin: 0; font-size: 0.95em;">
+                        <strong>💡 Tips for best results:</strong><br>
+                        • Face the camera directly<br>
+                        • Ensure good lighting on your face<br>
+                        • Remove glasses if detection fails<br>
+                        • Keep a natural expression
+                    </p>
+                </div>
                 <video id="cameraVideo" autoplay playsinline></video>
-                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <canvas id="cameraCanvas"></canvas>
                 
                 <div class="emotion-result" id="emotionResult">
                     <h3 style="color: var(--spotify-green);">Detected Emotion</h3>
@@ -864,13 +898,20 @@
             const emotionResult = document.getElementById('emotionResult');
             const captureBtn = document.querySelector('.capture-btn');
             
-            // Reset states
+            // Reset states completely
             emotionResult.classList.remove('show');
-            canvas.style.display = 'none';
+            canvas.classList.remove('show');
             video.style.display = 'block';
             captureBtn.textContent = '📸 Capture & Analyze';
             captureBtn.onclick = captureAndDetect;
+            captureBtn.disabled = false;  // Re-enable the button
             capturedImageData = null;
+            
+            // Clear any previous emotion text
+            const emotionText = document.getElementById('emotionText');
+            if (emotionText) {
+                emotionText.innerHTML = '';
+            }
             
             modal.classList.add('show');
             
@@ -889,6 +930,8 @@
             const modal = document.getElementById('cameraModal');
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
+            const captureBtn = document.querySelector('.capture-btn');
+            const emotionResult = document.getElementById('emotionResult');
             
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
@@ -898,10 +941,18 @@
             video.srcObject = null;
             modal.classList.remove('show');
             
-            // Clear captured image data from memory
+            // Reset all states for next open
             capturedImageData = null;
-            canvas.style.display = 'none';
+            canvas.classList.remove('show');
             video.style.display = 'block';
+            emotionResult.classList.remove('show');
+            
+            // Reset button state
+            if (captureBtn) {
+                captureBtn.disabled = false;
+                captureBtn.textContent = '📸 Capture & Analyze';
+                captureBtn.onclick = captureAndDetect;
+            }
         }
         
         async function captureAndDetect() {
@@ -911,13 +962,15 @@
             const emotionText = document.getElementById('emotionText');
             const captureBtn = document.querySelector('.capture-btn');
             
-            // Set canvas size to match video
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            // Resize canvas for faster processing (smaller frame = faster)
+            const maxWidth = 480;  // Smaller size for speed
+            const scale = video.videoWidth > maxWidth ? maxWidth / video.videoWidth : 1;
+            canvas.width = video.videoWidth * scale;
+            canvas.height = video.videoHeight * scale;
             
             // Draw video frame to canvas (capture snapshot)
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
             // PAUSE camera - stop video stream and show captured image
             if (cameraStream) {
@@ -925,10 +978,10 @@
                 cameraStream = null;
             }
             video.style.display = 'none';
-            canvas.style.display = 'block';
+            canvas.classList.add('show');
             
-            // Convert canvas to base64 image (JPEG, quality 0.8 for faster processing)
-            capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
+            // Convert canvas to base64 image (JPEG, quality 0.7 for faster processing & upload)
+            capturedImageData = canvas.toDataURL('image/jpeg', 0.7);
             
             // Show loading state
             emotionText.innerHTML = '<div style="color: var(--text-secondary);">🔍 Analyzing your expression...</div>';
@@ -944,10 +997,18 @@
                     body: JSON.stringify({ image: capturedImageData })
                 });
                 
-                const data = await response.json();
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('Server returned invalid response. Please try again.');
+                }
                 
                 if (response.ok && data.success) {
                     const { detected_mood, dominant_emotion, confidence, all_emotions } = data;
+                    
+                    console.log('Emotion detection successful:', data);
                     
                     emotionText.innerHTML = `
                         <p style="font-size: 1.2em; color: var(--spotify-green); font-weight: 700;">
@@ -977,22 +1038,40 @@
                     }, 2000);
                     
                 } else {
+                    console.error('Emotion detection failed:', data);
+                    const errorDetails = data.details || 'Make sure your face is clearly visible and well-lit';
+                    const debugInfo = data.debug ? `<br><small style="font-size: 0.8em; opacity: 0.7;">Debug: ${data.debug}</small>` : '';
+                    
                     emotionText.innerHTML = `
                         <p style="color: #ff4444;">
                             ❌ ${data.error || 'Could not detect face'}
                         </p>
                         <p style="font-size: 0.9em; color: var(--text-secondary); margin-top: 10px;">
-                            Make sure your face is clearly visible and well-lit
+                            ${errorDetails}${debugInfo}
                         </p>
+                        <div style="background: rgba(255, 68, 68, 0.1); border-left: 3px solid #ff4444; padding: 10px; border-radius: 6px; margin-top: 15px; text-align: left;">
+                            <p style="font-size: 0.85em; color: var(--text-primary); margin: 0;">
+                                <strong>Troubleshooting tips:</strong><br>
+                                ✓ Increase room lighting<br>
+                                ✓ Move closer to the camera<br>
+                                ✓ Look directly at the camera<br>
+                                ✓ Remove glasses or hats<br>
+                                ✓ Try a different angle
+                            </p>
+                        </div>
                     `;
                     captureBtn.disabled = false;
                     captureBtn.textContent = '🔄 Try Again';
                     captureBtn.onclick = retakePhoto;
                 }
             } catch (error) {
+                console.error('Exception during emotion detection:', error);
                 emotionText.innerHTML = `
                     <p style="color: #ff4444;">
                         ❌ Error: ${error.message}
+                    </p>
+                    <p style="font-size: 0.9em; color: var(--text-secondary); margin-top: 10px;">
+                        Please try again or check your connection.
                     </p>
                 `;
                 captureBtn.disabled = false;
@@ -1011,7 +1090,7 @@
             capturedImageData = null;
             
             // Hide captured image, show video again
-            canvas.style.display = 'none';
+            canvas.classList.remove('show');
             video.style.display = 'block';
             emotionResult.classList.remove('show');
             

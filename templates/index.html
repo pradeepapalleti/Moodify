@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mood-Based Music Recommender 🎵</title>
+    <title>Moodify 🎵</title>
     <style>
         :root {
             --spotify-green: #1DB954;
@@ -82,16 +82,19 @@
         
         .top-controls {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 24px;
             flex-wrap: wrap;
             gap: 15px;
+            position: relative;
         }
         
         .nav-buttons {
             display: flex;
             gap: 12px;
+            justify-content: center;
+            align-items: center;
         }
         
         .nav-btn {
@@ -120,6 +123,8 @@
         }
         
         .theme-toggle {
+            position: absolute;
+            right: 0;
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
@@ -453,14 +458,28 @@
             h1 { font-size: 2.5em; }
             .mood-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
             .stats-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-            .top-controls { justify-content: center; }
+            .top-controls { 
+                justify-content: center;
+                flex-direction: column;
+            }
+            .theme-toggle {
+                position: static;
+                margin-top: 10px;
+            }
+            .nav-buttons {
+                flex-wrap: wrap;
+            }
+            .nav-btn {
+                font-size: 0.8em;
+                padding: 10px 18px;
+            }
         }
     </style>
 </head>
 <body data-theme="dark">
     <div class="container">
         <header>
-            <h1>🎵 Mood Music Recommender</h1>
+            <h1>🎵 Moodify</h1>
             <p class="subtitle">Discover your perfect soundtrack based on your mood</p>
         </header>
         
@@ -468,6 +487,7 @@
             <div class="nav-buttons">
                 <button class="nav-btn active">🎭 Mood Selector</button>
                 <button class="nav-btn" onclick="window.location.href='/chat-page'">💬 Chat Mode</button>
+                <button class="nav-btn" onclick="window.location.href='/chat-page'">📷 Camera Mode</button>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
         </div>

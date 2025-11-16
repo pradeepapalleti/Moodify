@@ -213,3 +213,49 @@ Match your mood with perfect songs - type it, select it, or just show your face!
 
 **Version:** 2.0 with Camera Detection  
 **Last Updated:** November 2025
+
+---
+
+**Docker Deployment**
+
+- **Build image (PowerShell):**
+
+```powershell
+docker build -t moodify:latest .
+```
+
+- **Run container (PowerShell):**
+
+```powershell
+# Run detached, map port 5000
+docker run -d -p 5000:5000 --name moodify_app --rm moodify:latest
+
+# View logs
+docker logs -f moodify_app
+
+# Stop
+docker stop moodify_app
+```
+
+- **Using Docker Compose (recommended for development):**
+
+```powershell
+# Build and start (attach logs)
+docker-compose up --build
+
+# Run in background
+docker-compose up -d --build
+
+# Stop and remove
+docker-compose down
+```
+
+Notes:
+- The Docker image uses `python:3.11-slim` and installs `opencv`, `deepface` and `tensorflow`. The image may be large; be patient during the first build.
+- If you prefer to keep dataset files outside the image, add `data/` to `.dockerignore` and mount `- ./data:/app/data` in `docker-compose.yml`.
+- For GPU acceleration with TensorFlow, build a GPU-enabled image on a machine with NVIDIA Docker support (this Dockerfile is CPU-only).
+
+If you'd like, I can:
+- Add a multi-stage production Dockerfile (smaller runtime image)
+- Create a separate `Dockerfile.cpu` and `Dockerfile.gpu` with guidance for GPU setup
+- Prepare a small PowerShell script for common docker commands

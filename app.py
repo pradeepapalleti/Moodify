@@ -421,67 +421,118 @@ def detect_emotion():
         if img is None:
             return jsonify({'error': 'Invalid image data'}), 400
         
-        # Resize image to speed up processing (max 640px width)
+        # Resize to smaller frame for faster processing (max 480px width for speed)
         height, width = img.shape[:2]
-        if width > 640:
-            scale = 640 / width
-            new_width = 640
+        max_width = 480  # Smaller frame = faster processing
+        if width > max_width:
+            scale = max_width / width
+            new_width = max_width
             new_height = int(height * scale)
-            img = cv2.resize(img, (new_width, new_height))
+            img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
         
-        # Analyze facial expression using DeepFace with faster detector
-        try:
-            # Using opencv detector (faster) instead of default
-            result = DeepFace.analyze(
-                img, 
-                actions=['emotion'], 
-                enforce_detection=False,
-                detector_backend='opencv',  # Faster than default
-                silent=True  # Suppress output
-            )
-            
-            # Handle both single result and list of results
-            if isinstance(result, list):
-                result = result[0]
-            
-            emotions = result['emotion']
-            dominant_emotion = result['dominant_emotion']
-            
-            # Map DeepFace emotions to our mood categories
-            emotion_to_mood = {
-                'happy': 'Happy',
-                'sad': 'Sad',
-                'angry': 'Energetic',
-                'surprise': 'Excited',
-                'fear': 'Calm',
-                'disgust': 'Focus',
-                'neutral': 'Calm'
-            }
-            
-            # Get the detected mood
-            detected_mood = emotion_to_mood.get(dominant_emotion.lower(), 'Happy')
-            
-            # Get confidence score
-            confidence = emotions.get(dominant_emotion, 0)
-            
-            # IMAGE IS AUTOMATICALLY DELETED - Python variables are garbage collected
-            # No need to manually delete, img and result will be cleared from memory
-            
-            return jsonify({
-                'success': True,
-                'detected_mood': detected_mood,
-                'dominant_emotion': dominant_emotion,
-                'confidence': round(confidence, 2),
-                'all_emotions': {k: round(v, 2) for k, v in emotions.items()},
-                'message': f"Detected {dominant_emotion} expression! Suggesting {detected_mood} music."
-            })
-            
-        except Exception as analysis_error:
-            print(f"DeepFace analysis error: {str(analysis_error)}")
+        # Enhance image for better face detection
+        # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+        lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+        l = clahe.apply(l)
+        img = cv2.merge([l, a, b])
+        img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
+        
+        # Increase brightness and contrast if needed
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        brightness = np.mean(gray)
+        if brightness < 120:
+            # Increase brightness for dark images
+            img = cv2.convertScaleAbs(img, alpha=1.3, beta=40)
+        
+        # Try multiple detector backends for better reliability
+        detectors = ['retinaface', 'mtcnn', 'opencv', 'ssd']
+        result = None
+        last_error = None
+        
+        for detector in detectors:
+            try:
+                print(f"Trying detector: {detector}")
+                result = DeepFace.analyze(
+                    img, 
+                    actions=['emotion'], 
+                    enforce_detection=False,  # Don't require face detection
+                    detector_backend=detector,
+                    silent=True,
+                    align=True  # Align faces for better accuracy
+                )
+                print(f"Success with {detector} detector!")
+                break  # Success, exit loop
+            except Exception as e:
+                last_error = str(e)
+                print(f"{detector} detector failed: {last_error}")
+                continue
+        
+        # If all detectors failed, return error
+        if result is None:
+            print(f"All detectors failed. Last error: {last_error}")
             return jsonify({
                 'error': 'Could not detect face in image',
-                'details': str(analysis_error)
+                'details': 'Please ensure your face is clearly visible, well-lit, and facing the camera directly.',
+                'debug': last_error
             }), 400
+        
+        # Handle both single result and list of results
+        if isinstance(result, list):
+            if len(result) == 0:
+                return jsonify({
+                    'error': 'No face detected in image',
+                    'details': 'Please ensure your face is clearly visible and try again.'
+                }), 400
+            result = result[0]
+        
+        emotions = result.get('emotion', {})
+        dominant_emotion = result.get('dominant_emotion', 'neutral')
+        
+        # Convert all NumPy types to Python native types (fix JSON serialization)
+        emotions_clean = {}
+        for key, value in emotions.items():
+            # Convert numpy.float32/float64 to Python float
+            if hasattr(value, 'item'):
+                emotions_clean[key] = float(value.item())
+            else:
+                emotions_clean[key] = float(value)
+        
+        # Map DeepFace emotions to our mood categories
+        emotion_to_mood = {
+            'happy': 'Happy',
+            'sad': 'Sad',
+            'angry': 'Energetic',
+            'surprise': 'Happy',  # Changed from Excited to Happy
+            'fear': 'Calm',
+            'disgust': 'Focus',
+            'neutral': 'Calm'
+        }
+        
+        # Get the detected mood
+        detected_mood = emotion_to_mood.get(dominant_emotion.lower(), 'Happy')
+        
+        # Get confidence score and convert to Python float
+        confidence = emotions_clean.get(dominant_emotion, 0.0)
+        
+        # Apply confidence threshold for stability (only accept if confidence > 30%)
+        if confidence < 30.0:
+            # If confidence is low, use neutral/calm mood
+            detected_mood = 'Calm'
+            dominant_emotion = 'neutral'
+        
+        # IMAGE IS AUTOMATICALLY DELETED - Python variables are garbage collected
+        # No need to manually delete, img and result will be cleared from memory
+        
+        return jsonify({
+            'success': True,
+            'detected_mood': str(detected_mood),  # Ensure string type
+            'dominant_emotion': str(dominant_emotion),  # Ensure string type
+            'confidence': round(float(confidence), 2),
+            'all_emotions': {k: round(float(v), 2) for k, v in emotions_clean.items()},
+            'message': f"Detected {dominant_emotion} expression! Suggesting {detected_mood} music."
+        })
     
     except Exception as e:
         print(f"Error in emotion detection: {str(e)}")
@@ -495,5 +546,8 @@ if __name__ == '__main__':
     print("Open your browser and go to: http://localhost:5000")
     print("\nPress CTRL+C to stop the server")
     print("="*60 + "\n")
-    
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use PORT environment variable when provided (Render and other PaaS set this)
+    port = int(os.environ.get('PORT', 5000))
+    # Disable debug in production by default; allow override with FLASK_DEBUG
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ('1', 'true', 'yes')
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
