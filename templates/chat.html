@@ -431,7 +431,10 @@
             background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
             justify-content: center;
-            align-items: center;
+            /* allow the modal to start at top and be scrollable when content is taller than viewport */
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 40px 20px;
         }
         
         .camera-modal.show {
@@ -441,11 +444,14 @@
         .camera-content {
             background: var(--card-bg);
             border-radius: 16px;
-            padding: 30px;
+            padding: 20px;
             max-width: 640px;
-            width: 90%;
+            width: 100%;
             text-align: center;
             border: 1px solid var(--border-color);
+            /* prevent overflowing the viewport and enable internal scrolling when necessary */
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
         }
         
         .camera-content h2 {
@@ -456,6 +462,8 @@
         #cameraVideo, #cameraCanvas {
             width: 100%;
             max-width: 100%;
+            /* ensure video/canvas shrink on small viewports so the modal remains usable */
+            max-height: 60vh;
             border-radius: 12px;
             margin: 20px 0;
             border: 2px solid var(--spotify-green);
