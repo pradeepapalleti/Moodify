@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Moodify - Chat (Frontend)</title>
+    <style>body{font-family:Arial,Helvetica,sans-serif;background:#121212;color:#fff;padding:20px}</style>
+</head>
+<body>
+    <h1>Moodify — Chat + Camera (Frontend)</h1>
+    <p>This frontend runs TF.js/face-api.js in the browser to detect facial expressions and sends the detected mood to the backend.</p>
+
+    <button id="openCamera">Open Camera</button>
+    <div id="cameraContainer" style="margin-top:12px; display:none">
+        <video id="video" width="480" height="360" autoplay muted></video>
+        <canvas id="overlay" width="480" height="360" style="display:block"></canvas>
+        <div>
+            <button id="captureBtn">Capture & Detect</button>
+            <button id="closeBtn">Close</button>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="/config.js"></script>
+    <script>
+        // Load models from public hosting (face-api.js demo models)
+        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models/';
+
+        async function loadModels() {
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        }
+
+        let stream = null;
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const ctx = overlay.getContext('2d');
+
+        document.getElementById('openCamera').addEventListener('click', async () => {
+            document.getElementById('cameraContainer').style.display = 'block';
+            document.getElementById('result').innerText = 'Loading models...';
+            await loadModels();
+            document.getElementById('result').innerText = 'Models loaded. Starting camera...';
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({video: { facingMode: 'user', width: 640 }});
+                video.srcObject = stream;
+            } catch (err) {
+                document.getElementById('result').innerText = 'Camera error: ' + err.message;
+            }
+        });
+
+        document.getElementById('closeBtn').addEventListener('click', () => {
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            document.getElementById('cameraContainer').style.display = 'none';
+            ctx.clearRect(0,0,overlay.width, overlay.height);
+        });
+
+        document.getElementById('captureBtn').addEventListener('click', async () => {
+            if (!video.srcObject) return;
+            const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+            if (!detections) {
+                document.getElementById('result').innerText = 'No face detected. Try better lighting.';
+                return;
+            }
+            // draw box
+            const resizedDetections = faceapi.resizeResults(detections, {width: overlay.width, height: overlay.height});
+            ctx.clearRect(0,0,overlay.width, overlay.height);
+            const box = resizedDetections.detection.box;
+            ctx.strokeStyle = '#0f0';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+            // expressions
+            const expressions = detections.expressions;
+            // pick dominant emotion
+            let dominant = Object.keys(expressions).reduce((a,b)=> expressions[a] > expressions[b] ? a : b);
+
+            // map face-api expressions to moods
+            const map = {
+                happy: 'Happy',
+                sad: 'Sad',
+                angry: 'Energetic',
+                surprised: 'Happy',
+                fearful: 'Calm',
+                disgusted: 'Focus',
+                neutral: 'Calm'
+            };
+
+            const mood = map[dominant] || 'Happy';
+            document.getElementById('result').innerText = `Detected: ${dominant} → mood: ${mood}`;
+
+            // send to backend /chat
+            try {
+                const res = await fetch(BACKEND_URL + '/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ detected_mood: mood, num_songs: 8 })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const list = data.recommendations.map(r => `${r.name} — ${r.artist} [${r.language}] (⭐ ${r.popularity})`).join('\n');
+                    alert('Recommendations:\n\n' + list);
+                } else {
+                    alert('Backend error: ' + (data.error || JSON.stringify(data)));
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            }
+        });
+    </script>
+</body>
+</html>
