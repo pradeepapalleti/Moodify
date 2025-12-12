@@ -1,261 +1,264 @@
-# 🎵 Spotify Mood-Based Music Recommender# Mood-Based Song Recommendation AI
+# 🎵 Moodify — AI-Powered Mood-Based Music Recommender
 
+An intelligent music recommendation system that detects your mood through chat, camera, or manual selection and recommends personalized songs across multiple languages.
 
+---
 
-AI-powered music recommendation system with facial expression detection, multi-language support, and Spotify integration.This project aims to build an AI model that recommends songs based on the user's mood.
+## ✨ Key Features
 
+### 🎭 **Mood Selector Mode**
+- Pick from 8 moods: Happy, Sad, Energetic, Calm, Romantic, Motivated, Party, Focus
+- Select from 6 languages: English, Hindi, Telugu, Tamil, Malayalam, Kannada
+- 1,156+ curated Spotify tracks with real-time playback
+- Adjustable recommendation count (1-50 songs)
 
+### 💬 **AI Chat Mode**
+- Natural language mood detection ("I'm feeling happy", "I'm sad")
+- Multi-language support with auto-detection ("Give me Hindi sad songs")
+- Conversation memory (context-aware, remembers previous moods)
+- Smart continuations ("more songs" intelligently repeats previous context)
+- Session-based conversation history
 
----## Project Structure
-
-
-
-## ✨ Features- `app.py`: The main application file.
-
-- `data/`: Contains the dataset for training the model.
-
-### 🎭 **Mood Selector Mode**- `notebooks/`: Jupyter notebooks for exploration and model development.
-
-- 8 moods: Happy, Sad, Energetic, Calm, Romantic, Motivated, Party, Focus- `requirements.txt`: A list of Python dependencies for the project.
-
-- 6 languages: English, Hindi, Telugu, Tamil, Malayalam, Kannada- `.gitignore`: Specifies which files to ignore in git.
-
-- 1,156+ curated Spotify tracks
-
-- Direct Spotify playback integration## How to get started
-
-
-
-### 💬 **AI Chat Mode**1. **Install dependencies**:
-
-- Natural language mood detection ("I'm feeling happy")   ```bash
-
-- Conversation memory (context-aware responses)   pip install -r requirements.txt
-
-- Auto language detection from text ("Give me Hindi sad songs")   ```
-
-- Smart continuations ("more songs" remembers previous context)2. **Find a dataset**: You'll need a dataset of songs with mood labels. Some potential sources are the Million Song Dataset, or you can create your own by scraping data from services like Spotify or Last.fm.
-
-3. **Data Preprocessing and Feature Extraction**: Clean the data and extract relevant features from the audio or metadata.
-
-### 📷 **NEW: Camera Mood Detection**4. **Model Training**: Train a machine learning model to predict the mood of a song.
-
-- Real-time facial expression analysis5. **Build the Recommendation System**: Use the trained model to recommend songs that match a user's mood.
-
-- AI-powered emotion recognition (DeepFace + TensorFlow)
-- Automatic mood mapping: happy, sad, angry, surprise → music moods
-- Privacy-focused: local processing, no data saved
+### 📷 **Camera Mood Detection** (NEW)
+- Real-time facial expression analysis
+- AI-powered emotion recognition (DeepFace + OpenCV)
+- Instant mood mapping: happy, sad, angry, surprise → music recommendations
+- Privacy-first: images processed locally, never stored or transmitted
+- Fast processing with CLAHE image enhancement
 
 ### 🎨 **Spotify-Inspired UI**
-- Dark/Light mode with localStorage persistence
-- Spotify green (#1DB954) color palette
-- Smooth animations and transitions
-- Fully responsive design
+- Dark/Light theme toggle with localStorage persistence
+- Spotify green (#1DB954) color scheme
+- Smooth animations and responsive design
+- Fully mobile-friendly interface
+- Real-time stats dashboard
+
+---
+
+## 📋 Project Structure
+
+```
+Moodify/
+├── app.py                                    # Flask backend + all endpoints
+├── templates/
+│   ├── index.html                           # Mood selector interface
+│   └── chat.html                            # Chat + camera detection UI
+├── data/
+│   ├── spotify_mood_tracks.csv              # Dataset (English)
+│   └── spotify_mood_tracks_multilang.csv    # Dataset (Multi-language)
+├── notebooks/
+│   └── 1_data_collection.ipynb              # Data exploration & processing
+├── requirements.txt                         # Python dependencies
+├── Dockerfile                               # Docker configuration
+└── docker-compose.yml                       # Docker Compose setup
+```
 
 ---
 
 ## 🚀 Quick Start
 
-### Installation
+### Prerequisites
+- Python 3.9+
+- Webcam (for camera mode)
+- Modern web browser
+
+### Installation & Run
+
 ```bash
-# Install dependencies
+# 1. Clone repository
+git clone https://github.com/pradeepapalleti/Moodify.git
+cd Moodify
+
+# 2. Create virtual environment (optional but recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# Run the app
+# 4. Run the application
 python app.py
 
-# Open browser
+# 5. Open browser and visit
 http://localhost:5000
 ```
 
-### Requirements
+### Docker Option
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or with Docker directly
+docker build -t moodify:latest .
+docker run -p 5000:5000 moodify:latest
 ```
-Flask==3.0.3
-pandas==2.3.3
-opencv-python==4.12.0.88
-deepface==0.0.95
-tensorflow==2.20.0
-```
 
----
+## 💻 How to Use
 
-## 📖 How to Use
+### Option 1: 🎭 Mood Selector
+1. Go to **http://localhost:5000**
+2. Select a **language** (All Languages or specific language)
+3. Pick a **mood** (Happy, Sad, Energetic, etc.)
+4. Set **number of recommendations** (1-50)
+5. Click **"Get Recommendations"**
+6. Click any **"▶️ Play"** button to open track in Spotify
 
-### Option 1: Mood Selector
-1. Select a mood (Happy, Sad, etc.)
-2. Choose a language (or All Languages)
-3. Set number of recommendations
-4. Get instant song suggestions
+### Option 2: 💬 Chat Mode
+1. Go to **http://localhost:5000/chat-page**
+2. Type how you're feeling (examples: "I'm happy", "I want sad Hindi songs", "Give me energetic party music")
+3. The AI detects your mood and language automatically
+4. Get recommendations instantly
+5. Continue the conversation: "more songs", "different mood", etc.
+6. Conversation memory remembers your previous context
 
-### Option 2: AI Chat
-1. Type how you're feeling: "I'm sad"
-2. Specify language: "Give me Hindi romantic songs"
-3. Continue conversation: "more songs like that"
-4. Get context-aware recommendations
-
-### Option 3: Camera Detection 📸
-1. Click **"📷 Face Mood"** button
-2. Allow camera access
-3. Make a facial expression
-4. Click **"📸 Capture & Analyze"**
-5. AI detects your emotion and recommends songs!
+### Option 3: 📷 Camera Mode
+1. Go to **http://localhost:5000/chat-page**
+2. Click **"📷 Camera Mode"** button
+3. Allow camera access
+4. Make a facial expression (happy, sad, angry, etc.)
+5. Click **"📸 Capture & Analyze"**
+6. AI detects your emotion and recommends songs
+7. Click **"▶️ Play"** to open songs in Spotify
 
 **Emotion Mapping:**
-- 😊 Happy → Happy music
-- 😢 Sad → Sad songs
-- 😠 Angry → Energetic tracks
-- 😐 Neutral → Calm vibes
-
----
+- 😊 Happy/Surprised → Happy music
+- 😢 Sad → Sad/Romantic songs
+- 😠 Angry/Disgusted → Energetic tracks
+- 😐 Neutral/Fear → Calm/Focus music
 
 ## 🛠️ Tech Stack
 
-**Frontend:** HTML5, CSS3, JavaScript (WebRTC for camera)  
-**Backend:** Flask, Pandas  
-**AI/ML:** DeepFace, TensorFlow, OpenCV  
-**Data:** 1,156 Spotify tracks with metadata  
-**Design:** Spotify-inspired dark/light theme
+| Component | Technology | Version |
+|-----------|------------|---------|
+| **Backend** | Flask | 3.0.3 |
+| **Data Processing** | Pandas, NumPy | 2.3.3, 2.2.6 |
+| **Computer Vision** | OpenCV | 4.12.0 |
+| **Emotion Detection** | DeepFace | 0.0.95 |
+| **Deep Learning** | TensorFlow, tf-keras | 2.20.0 |
+| **Frontend** | HTML5, CSS3, JavaScript | ES6+ |
+| **Camera** | WebRTC API | Browser Native |
+| **Containerization** | Docker, Docker Compose | Latest |
+| **API** | Spotify Web Search | REST |
+| **Database** | CSV (Pandas) | - |
 
----
+## 📊 Dataset Overview
 
-## 📊 Dataset
-
-- **Total Tracks:** 1,156 unique songs
-- **Languages:** English (246), Hindi (205), Tamil (199), Telugu (197), Kannada (159), Malayalam (150)
+- **Total Tracks:** 1,156+ unique songs
+- **Languages:** 
+  - English (246)
+  - Hindi (205)
+  - Tamil (199)
+  - Telugu (197)
+  - Kannada (159)
+  - Malayalam (150)
 - **Moods:** Happy (164), Energetic (151), Sad (150), Focus (146), Calm (145), Romantic (145), Motivated (133), Party (122)
-- **Features:** Track ID, name, artist, album, popularity, duration, release date
+- **Track Features:** Track ID, Name, Artist, Album, Duration, Popularity Score, Language, Mood
+- **Source:** Spotify Web API + Curated Selection
+- **Files:** 
+  - `spotify_mood_tracks.csv` (English only)
+  - `spotify_mood_tracks_multilang.csv` (Multi-language)
 
----
+## 🔗 API Endpoints
 
-## 🎯 API Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/` | GET | Mood selector interface |
+| `/chat-page` | GET | Chat + camera detection interface |
+| `/recommend` | POST | Get recommendations by mood & language |
+| `/chat` | POST | Natural language chat with mood detection |
+| `/detect-emotion` | POST | Facial emotion detection from camera image |
+| `/stats` | GET | Dataset statistics (moods, languages, artists) |
 
-- `GET /` - Mood selector page
-- `GET /chat-page` - AI chat interface
-- `POST /recommend` - Get recommendations by mood/language
-- `POST /chat` - Natural language chat with mood detection
-- `POST /detect-emotion` - Facial emotion detection from camera
-- `GET /stats` - Dataset statistics
+### Example Requests
 
----
+**Get Recommendations:**
+```bash
+curl -X POST http://localhost:5000/recommend \
+  -H "Content-Type: application/json" \
+  -d '{"mood": "Happy", "language": "English", "num_songs": 10}'
+```
+
+**Chat Mode:**
+```bash
+curl -X POST http://localhost:5000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "I am feeling happy", "language": null, "num_songs": 5}'
+```
+
+**Get Stats:**
+```bash
+curl http://localhost:5000/stats
+```
 
 ## 🔒 Privacy & Security
 
-- Camera access only on user request
-- Images processed locally, not stored
-- No external data transmission
-- Session-based conversation memory (not persisted)
+- ✅ **Local Processing:** All facial analysis happens in your browser/server (no cloud)
+- ✅ **No Data Storage:** Camera images are processed instantly and never saved
+- ✅ **No External Transmission:** Images never leave your device
+- ✅ **Session Privacy:** Conversation history is session-based, not persisted to disk
+- ✅ **Open Source:** Full code transparency for security audit
 
----
+## 🎨 UI/UX Features
 
-## 📁 Project Structure
-
-```
-practice/
-├── app.py                              # Flask backend + AI logic
-├── templates/
-│   ├── index.html                      # Mood selector UI
-│   └── chat.html                       # Chat + camera UI
-├── data/
-│   └── spotify_mood_tracks_multilang.csv  # 1,156 tracks dataset
-├── requirements.txt                    # Python dependencies
-└── practice_backup/                    # Backup of all files
-```
-
----
-
-## 🎨 UI Highlights
-
-- **Spotify Color Palette:** #1DB954 green, #121212 dark bg
-- **CSS Variables:** Dynamic theming support
-- **Theme Toggle:** 🌙/☀️ button with persistence
-- **Play Buttons:** ▶️ Individual track playback
-- **Album Links:** 🎵 Open full Spotify search
-- **Responsive:** Works on mobile, tablet, desktop
-
----
-
-## 💡 Technologies
-
-| Category | Tools |
-|----------|-------|
-| **Web Framework** | Flask 3.0.3 |
-| **Data Processing** | Pandas, NumPy |
-| **Computer Vision** | OpenCV 4.12 |
-| **AI/ML** | DeepFace, TensorFlow 2.20 |
-| **API** | Spotify Web API (Search) |
-| **Frontend** | HTML5, CSS3, JavaScript ES6 |
-
----
+- **Color Scheme:** Spotify green (#1DB954), Dark gray (#121212), Light accents (#b3b3b3)
+- **Theme Toggle:** 🌙 Dark / ☀️ Light modes with localStorage persistence
+- **Animations:** Smooth fade-ins, hover effects, spinning loaders
+- **Responsive Layout:** CSS Grid & Flexbox for mobile/tablet/desktop
+- **Interactive Elements:**
+  - Mood selection buttons with active states
+  - Language selector with badge counts
+  - Real-time stats dashboard
+  - Song cards with artist/album info
+  - Play buttons linking directly to Spotify
+  - Full album search links
+- **Accessibility:** Semantic HTML, proper contrast ratios, keyboard navigation
 
 ## 🔧 Advanced Features
 
-- **Conversation Memory:** Stores last 10 exchanges per session
-- **Language Detection:** Regex-based keyword matching ("Hindi songs", "Tamil music")
-- **Mood Synonyms:** Maps "joyful", "cheerful" → Happy
-- **Continuation Logic:** "more songs" retrieves same mood/language
-- **Lazy Loading:** TensorFlow imports only when camera used (fast startup)
+- **Conversation Memory:** Stores up to 10 recent exchanges per session
+- **Language Detection:** Regex patterns to detect language from user text ("Hindi songs", "Tamil music")
+- **Mood Synonyms:** Maps colloquial mood expressions to mood categories
+- **Smart Continuations:** "more songs" automatically repeats the previous mood/language
+- **Image Enhancement:** CLAHE (Contrast Limited Adaptive Histogram Equalization) for better face detection in poor lighting
+- **Multiple Face Detectors:** Falls back through RetinaFace → MTCNN → OpenCV → SSD if one fails
+- **Lazy Loading:** TensorFlow and DeepFace only imported when camera is used (faster startup)
+- **Confidence Thresholds:** Emotion detection only accepted if confidence > 30%
+
+## 📝 Credits & References
+
+- **Data:** Spotify Web API for track metadata
+- **Facial Recognition:** DeepFace (Facebook Research)
+- **Computer Vision:** OpenCV library
+- **Deep Learning Framework:** TensorFlow & Keras
+- **Backend Framework:** Flask
+- **Design Inspiration:** Spotify official brand guidelines
+- **Dataset Curation:** Manual selection and validation
+
+## 📄 License
+
+This project is open-source and available under the MIT License.
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+- Report bugs and issues
+- Suggest new features
+- Improve documentation
+- Optimize performance
+- Add more languages/moods
+
+## 📧 Contact & Support
+
+For issues, feature requests, or questions:
+- GitHub Issues: [pradeepapalleti/Moodify](https://github.com/pradeepapalleti/Moodify/issues)
+- Email: pradeepapalleti@example.com
 
 ---
 
-## 📝 Credits
+## 🎉 Enjoy Moodify!
 
-**Data Source:** Spotify Web API  
-**AI Model:** DeepFace (pre-trained facial recognition)  
-**Design Inspiration:** Spotify official color palette
+Match your mood with perfect songs — **type it, select it, or just show your face!** 🎶✨
 
----
-
-## 🎉 Enjoy Your Personalized Music Experience!
-
-Match your mood with perfect songs - type it, select it, or just show your face! 🎶✨
-
----
-
-**Version:** 2.0 with Camera Detection  
-**Last Updated:** November 2025
-
----
-
-**Docker Deployment**
-
-- **Build image (PowerShell):**
-
-```powershell
-docker build -t moodify:latest .
-```
-
-- **Run container (PowerShell):**
-
-```powershell
-# Run detached, map port 5000
-docker run -d -p 5000:5000 --name moodify_app --rm moodify:latest
-
-# View logs
-docker logs -f moodify_app
-
-# Stop
-docker stop moodify_app
-```
-
-- **Using Docker Compose (recommended for development):**
-
-```powershell
-# Build and start (attach logs)
-docker-compose up --build
-
-# Run in background
-docker-compose up -d --build
-
-# Stop and remove
-docker-compose down
-```
-
-Notes:
-- The Docker image uses `python:3.11-slim` and installs `opencv`, `deepface` and `tensorflow`. The image may be large; be patient during the first build.
-- If you prefer to keep dataset files outside the image, add `data/` to `.dockerignore` and mount `- ./data:/app/data` in `docker-compose.yml`.
-- For GPU acceleration with TensorFlow, build a GPU-enabled image on a machine with NVIDIA Docker support (this Dockerfile is CPU-only).
-
-If you'd like, I can:
-- Add a multi-stage production Dockerfile (smaller runtime image)
-- Create a separate `Dockerfile.cpu` and `Dockerfile.gpu` with guidance for GPU setup
-- Prepare a small PowerShell script for common docker commands
+**Current Version:** 2.0 (with Camera Detection)  
+**Last Updated:** December 2025  
+**Status:** Active Development
